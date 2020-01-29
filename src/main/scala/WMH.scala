@@ -8,6 +8,7 @@ import org.apache.spark.ml.feature._
 import org.apache.spark.ml.linalg.Vectors
 import org.apache.spark.ml.param.ParamMap
 import org.apache.spark.ml.tuning.{CrossValidator, ParamGridBuilder}
+import org.apache.spark.mllib.evaluation.MulticlassMetrics
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.{SparkConf, SparkContext}
@@ -17,6 +18,8 @@ import scala.util.{Failure, Success, Try}
 object WMH extends App with Configuration with scalax.chart.module.Charting {
 
   import sqlContext.implicits._
+
+  var labelIndexerModel: StringIndexerModel  = _
 
   def prepareRdd(rdd: RDD[String]) = {
     val df1 = rdd
@@ -35,7 +38,7 @@ object WMH extends App with Configuration with scalax.chart.module.Charting {
       combinations <- in combinations len
     } yield combinations.mkString
 
-  def testCase(layer: List[Int], stepSize: Double, trainDf: DataFrame, testDf: DataFrame): Unit = {
+  def testCase(layer: List[Int], stepSize: Double, trainDf: DataFrame, testDf: DataFrame, metric: String): Unit = {
     val classifier = new MultilayerPerceptronClassifier("WMH")
     val paramMap = new ParamGridBuilder()
       .addGrid(classifier.layers, Array(layer.toArray))
@@ -48,93 +51,64 @@ object WMH extends App with Configuration with scalax.chart.module.Charting {
       .setNumFolds(5)
 
     val start = Instant.now()
-    val trainedModel = crossValidator.fit(trainDf.union(testDf))
+    val trainedModel = crossValidator.fit(testDf)
     val stop = Instant.now()
+
+    val result = trainedModel.transform(testDf)
+
+    val metrics = new MulticlassMetrics(result.rdd
+      .map(row => (row.getAs[Double]("prediction"), row.getAs[Double]("label"))))
 
     val time = stop.toEpochMilli - start.toEpochMilli
 
-    println(s"${layer(1)};${layer(2)};${trainedModel.avgMetrics(0)};$time;$stepSize")
+    println(s"label,precision,recall")
+    (0.0 to 40.0 by 1.0).foreach(e => {
+      val label = labelIndexerModel.labelsArray(0)(e.toInt)
+      val precision = metrics.precision(e)
+      val recall = metrics.recall(e)
+      println(s"$label,$precision,$recall")
+    })
+
+    println(metrics.labels)
+    val m = metrics.confusionMatrix.rowIter.map(e => e.toArray.map(f => f.toInt).toVector)
+    m.foreach(e => println(e))
+
+    //println(s"${layer(1)},${trainedModel.avgMetrics.head},$time,$stepSize")
   }
 
   override def main(args: Array[String]): Unit = {
 
-    val train = sparkContext.textFile("resources/rs_test5_exhaustive_no_headers.txt")
-    val test = sparkContext.textFile("resources/rs_test5_exhaustive_no_headers.txt")
+      val train = sparkContext.textFile("resources/rs_test5_exhaustive_no_headers.txt")
+      val test = sparkContext.textFile("resources/rs_test5_exhaustive_no_headers.txt")
 
-    val labelIndexer = new StringIndexer()
-      .setInputCol("label_0")
-      .setOutputCol("label")
+      val labelIndexer = new StringIndexer()
+        .setInputCol("label_0")
+        .setOutputCol("label")
 
-    val trainDf1 = this.prepareRdd(train)
-    val testDf1 = this.prepareRdd(test)
-    val labelIndexerModel = labelIndexer.fit(trainDf1)
-    val trainDf = labelIndexerModel.transform(trainDf1)
-    val testDf = labelIndexerModel.transform(testDf1)
+      val trainDf1 = this.prepareRdd(train)
+      val testDf1 = this.prepareRdd(test)
+      labelIndexerModel = labelIndexer.fit(trainDf1)
+      val trainDf = labelIndexerModel.transform(trainDf1)
+      val testDf = labelIndexerModel.transform(testDf1)
+      val metric = "precision"
 
-    println(s"wczytano ${trainDf.count} wierszy dla trainDf")
-    println(s"wczytano ${testDf.count} wierszy dla testDf")
+      println(s"wczytano ${trainDf.count} wierszy dla trainDf")
+      println(s"wczytano ${testDf.count} wierszy dla testDf")
 
-    val accuracyEvaluator = new MulticlassClassificationEvaluator()
-      .setMetricName("accuracy")
-    val precisionEvaluator = new MulticlassClassificationEvaluator()
-      .setMetricName("weightedPrecision")
+      println(s"layer(1),f1,precision,recall,czas,stepSize")
+      val layers = for {
+        x <- 70 to 80 by 10
+        y <- 70 to 90 by 10
+      } yield List(inputNeurons, x, y, outputNeurons)
 
-    println(s"layer(1);layer(2);f1;czas;stepSize")
-    val layers = for {
-      x <- 10 to 100 by 10
-      y <- 10 to 100 by 10
-    } yield List(inputNeurons, x, y, outputNeurons)
-
-    testCase(List(inputNeurons, 80, 80, outputNeurons), 0.7, trainDf, testDf)
-
-    // two layers tests:
-//    for {
-//      stepSize <- 0.1 to 1.00 by 0.3
-//      layer <- layers
-//    } yield {
-//      testCase(layer, stepSize, trainDf, testDf)
-//    }
-
-  //        classifier
-  //          .setLayers(e.toArray)
-  //          .setMaxIter(250)
-  //          .fit(trainDf)
-  //
-  //      val result = cv.transform(testDf)
-  //
-  //      val accuracy = accuracyEvaluator.evaluate(result)
-  //      val precission = precisionEvaluator.evaluate(result)
-  //
-  //      println(s"Accuracy for test ${e(1)}/${e(2)}   = $accuracy")
-  //      println(s"Precission for test ${e(1)}/${e(2)} = $precission")
-
-  //      val cv = new CrossValidator()
-  //        .setEstimator(classifier)
-  //        .setEvaluator(new MulticlassClassificationEvaluator())
-  //        .setEstimatorParamMaps(Array(paramMap))
-  //        .setNumFolds(5)
-  //        .fit(df)
-  //      cv.avgMetrics
-  //        .foreach(f => println(s"metrics for test ${e(1)}: $f"))
+      for {
+        stepSize <- List(0.7)
+        layer <- layers
+      } yield {
+        testCase(layer, stepSize, trainDf, testDf, metric)
+      }
     }
 
     sparkSession.close()
 
-//    val (accuracy, precision): (Seq[(Int, Double)], Seq[(Int, Double)]) = result.unzip
-//
-//    val writer1 = new PrintWriter(new File("tmp/accuracy.txt"))
-//    val writer2 = new PrintWriter(new File("tmp/precision.txt"))
-//
-//    accuracy.foreach(e => writer1.println(s"${e._1};${e._2}"))
-//    writer1.close()
-//    precision.foreach(e => writer2.println(s"${e._1};${e._2}"))
-//    writer2.close()
-//
-//    val chart1 = XYLineChart(accuracy)
-//    chart1.plot.setRenderer(new org.jfree.chart.renderer.xy.XYLineAndShapeRenderer(false, true))
-//    chart1.saveAsPNG("tmp/accuracy.png")
-//    val chart2 = XYLineChart(precision)
-//    chart2.plot.setRenderer(new org.jfree.chart.renderer.xy.XYLineAndShapeRenderer(false, true))
-//    chart2.saveAsPNG("tmp/precision.png")
-//
 }
