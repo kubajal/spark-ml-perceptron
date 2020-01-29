@@ -1,0 +1,74 @@
+Using Spark's default log4j profile: org/apache/spark/log4j-defaults.properties
+20/01/28 23:54:45 INFO SparkContext: Running Spark version 3.0.0-preview
+20/01/28 23:54:46 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+20/01/28 23:54:46 INFO ResourceUtils: ==============================================================
+20/01/28 23:54:46 INFO ResourceUtils: Resources for spark.driver:
+
+20/01/28 23:54:46 INFO ResourceUtils: ==============================================================
+20/01/28 23:54:46 INFO SparkContext: Submitted application: WEDT
+20/01/28 23:54:46 INFO SecurityManager: Changing view acls to: kubajal
+20/01/28 23:54:46 INFO SecurityManager: Changing modify acls to: kubajal
+20/01/28 23:54:46 INFO SecurityManager: Changing view acls groups to: 
+20/01/28 23:54:46 INFO SecurityManager: Changing modify acls groups to: 
+20/01/28 23:54:46 INFO SecurityManager: SecurityManager: authentication disabled; ui acls disabled; users  with view permissions: Set(kubajal); groups with view permissions: Set(); users  with modify permissions: Set(kubajal); groups with modify permissions: Set()
+20/01/28 23:54:48 INFO Utils: Successfully started service 'sparkDriver' on port 64330.
+20/01/28 23:54:48 INFO SparkEnv: Registering MapOutputTracker
+20/01/28 23:54:48 INFO SparkEnv: Registering BlockManagerMaster
+20/01/28 23:54:48 INFO BlockManagerMasterEndpoint: Using org.apache.spark.storage.DefaultTopologyMapper for getting topology information
+20/01/28 23:54:48 INFO BlockManagerMasterEndpoint: BlockManagerMasterEndpoint up
+20/01/28 23:54:48 INFO DiskBlockManager: Created local directory at C:\Users\user\AppData\Local\Temp\blockmgr-41742a8a-e813-4b60-b2ba-49002870b9fa
+20/01/28 23:54:48 INFO MemoryStore: MemoryStore started with capacity 1992.9 MiB
+20/01/28 23:54:48 INFO SparkEnv: Registering OutputCommitCoordinator
+20/01/28 23:54:48 INFO Utils: Successfully started service 'SparkUI' on port 4040.
+20/01/28 23:54:48 INFO SparkUI: Bound SparkUI to 0.0.0.0, and started at http://192.168.1.11:4040
+20/01/28 23:54:49 INFO Executor: Starting executor ID driver on host 192.168.1.11
+20/01/28 23:54:49 INFO Utils: Successfully started service 'org.apache.spark.network.netty.NettyBlockTransferService' on port 64389.
+20/01/28 23:54:49 INFO NettyBlockTransferService: Server created on 192.168.1.11:64389
+20/01/28 23:54:49 INFO BlockManager: Using org.apache.spark.storage.RandomBlockReplicationPolicy for block replication policy
+20/01/28 23:54:49 INFO BlockManagerMaster: Registering BlockManager BlockManagerId(driver, 192.168.1.11, 64389, None)
+20/01/28 23:54:49 INFO BlockManagerMasterEndpoint: Registering block manager 192.168.1.11:64389 with 1992.9 MiB RAM, BlockManagerId(driver, 192.168.1.11, 64389, None)
+20/01/28 23:54:49 INFO BlockManagerMaster: Registered BlockManager BlockManagerId(driver, 192.168.1.11, 64389, None)
+20/01/28 23:54:49 INFO BlockManager: Initialized BlockManager: BlockManagerId(driver, 192.168.1.11, 64389, None)
+wczytano 180 wierszy dla trainDf
+wczytano 180 wierszy dla testDf
+layer(1);f1;czas;stepSize
+10;0.4116856251943653;19973;0.1
+20;0.3220008265718919;15801;0.1
+30;0.4494249277009069;14109;0.1
+40;0.48795858174881906;15378;0.1
+50;0.56894147802448;13717;0.1
+60;0.5499700452583338;15432;0.1
+70;0.5753503587243891;15932;0.1
+80;0.538194206927836;15665;0.1
+90;0.5470493479366332;15781;0.1
+100;0.4822394639162898;17895;0.1
+10;0.4116856251943653;10786;0.4
+20;0.3220008265718919;13389;0.4
+30;0.448550801826781;13114;0.4
+40;0.48795858174881906;14132;0.4
+50;0.56894147802448;14941;0.4
+60;0.5499700452583338;16019;0.4
+70;0.5753503587243891;14801;0.4
+80;0.538194206927836;16040;0.4
+90;0.5470493479366332;15056;0.4
+100;0.4822394639162898;15887;0.4
+10;0.4116856251943653;11716;0.7
+20;0.3220008265718919;13617;0.7
+30;0.4494249277009069;13034;0.7
+40;0.48795858174881906;13336;0.7
+50;0.56894147802448;13568;0.7
+60;0.5499700452583338;15932;0.7
+70;0.5753503587243891;14875;0.7
+80;0.538194206927836;15575;0.7
+90;0.5470493479366332;15405;0.7
+100;0.4822394639162898;16169;0.7
+10;0.4116856251943653;11045;1.0
+20;0.3220008265718919;13848;1.0
+30;0.4494249277009069;13381;1.0
+40;0.48795858174881906;13468;1.0
+50;0.56894147802448;13128;1.0
+60;0.5499700452583338;15949;1.0
+70;0.5753503587243891;14187;1.0
+80;0.538194206927836;15065;1.0
+90;0.5470493479366332;14705;1.0
+100;0.4822394639162898;14915;1.0

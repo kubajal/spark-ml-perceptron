@@ -35,6 +35,27 @@ object WMH extends App with Configuration with scalax.chart.module.Charting {
       combinations <- in combinations len
     } yield combinations.mkString
 
+  def testCase(layer: List[Int], stepSize: Double, trainDf: DataFrame, testDf: DataFrame): Unit = {
+    val classifier = new MultilayerPerceptronClassifier("WMH")
+    val paramMap = new ParamGridBuilder()
+      .addGrid(classifier.layers, Array(layer.toArray))
+      .addGrid(classifier.stepSize, Array(stepSize))
+      .build()
+    val crossValidator = new CrossValidator()
+      .setEstimator(classifier)
+      .setEvaluator(new MulticlassClassificationEvaluator())
+      .setEstimatorParamMaps(paramMap)
+      .setNumFolds(5)
+
+    val start = Instant.now()
+    val trainedModel = crossValidator.fit(trainDf.union(testDf))
+    val stop = Instant.now()
+
+    val time = stop.toEpochMilli - start.toEpochMilli
+
+    println(s"${layer(1)};${layer(2)};${trainedModel.avgMetrics(0)};$time;$stepSize")
+  }
+
   override def main(args: Array[String]): Unit = {
 
     val train = sparkContext.textFile("resources/rs_test5_exhaustive_no_headers.txt")
@@ -64,29 +85,15 @@ object WMH extends App with Configuration with scalax.chart.module.Charting {
       y <- 10 to 100 by 10
     } yield List(inputNeurons, x, y, outputNeurons)
 
-    for {
-      stepSize <- 0.1 to 1.00 by 0.3
-      layer <- layers
-    } yield {
-      val classifier = new MultilayerPerceptronClassifier("WMH")
-      val paramMap = new ParamGridBuilder()
-        .addGrid(classifier.layers, Array(layer.toArray))
-        .addGrid(classifier.stepSize, Array(stepSize))
-        .build()
-      val crossValidator = new CrossValidator()
-        .setEstimator(classifier)
-        .setEvaluator(new MulticlassClassificationEvaluator())
-        .setEstimatorParamMaps(paramMap)
-        .setNumFolds(5)
+    testCase(List(inputNeurons, 80, 80, outputNeurons), 0.7, trainDf, testDf)
 
-      val start = Instant.now()
-      val trainedModel = crossValidator.fit(trainDf.union(testDf))
-      val stop = Instant.now()
-
-      val time = stop.toEpochMilli - start.toEpochMilli
-
-      println(s"${layer(1)};${layer(2)};${trainedModel.avgMetrics(0)};$time;$stepSize")
-    }
+    // two layers tests:
+//    for {
+//      stepSize <- 0.1 to 1.00 by 0.3
+//      layer <- layers
+//    } yield {
+//      testCase(layer, stepSize, trainDf, testDf)
+//    }
 
   //        classifier
   //          .setLayers(e.toArray)
